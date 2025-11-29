@@ -82,7 +82,7 @@
       "wss://*/*"
     ],
     "action": {
-      "default_title": "BrainyAI"
+      "default_title": "CPO TARS"
     },
     "permissions": [
       "declarativeNetRequest",

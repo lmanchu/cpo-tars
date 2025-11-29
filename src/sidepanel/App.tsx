@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { TabNav } from './components/TabNav';
 import { Settings } from './components/Settings';
+import { MacrosTab } from './components/MacrosTab';
 import { getHistory } from '~utils/history';
 import { getStorage, setStorage } from '~utils/storage';
 import type { TranslationHistory, UserSettings } from '~types';
@@ -70,12 +71,7 @@ export const App = () => {
                     </div>
                 )}
                 {activeTab === 'Macros' && (
-                    <div className="space-y-4">
-                        <div className="bg-white p-4 rounded shadow-sm">
-                            <h3 className="font-bold mb-2">Prompt Macros</h3>
-                            <p className="text-sm text-gray-600">Coming soon...</p>
-                        </div>
-                    </div>
+                    <MacrosTab />
                 )}
                 {activeTab === 'VLM' && (
                     <div className="space-y-4">

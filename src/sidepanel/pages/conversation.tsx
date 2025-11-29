@@ -876,11 +876,11 @@ const QuickPromptButtons = memo(() => {
         setIsProcessing(promptId);
 
         try {
-            // Get selected text from current tab
+            // Get selected text or page content from current tab
             const selectedText = await getTabSelection();
 
             if (!selectedText) {
-                message.warning('Please select some text on the webpage first!');
+                message.warning('Unable to get content from the page.');
                 setIsProcessing(null);
                 return;
             }
@@ -938,26 +938,19 @@ const QuickPromptButtons = memo(() => {
     const prompts = TEXT_PROMPTS.filter(p => p.id !== 'ask-ai');
 
     return (
-        <div className="px-4 py-2 bg-white border-b border-gray-100">
-            <div className="flex gap-2 items-center">
-                <span className="text-xs text-gray-500 mr-2">Quick Actions:</span>
+        <div className="px-3 py-2 bg-white border-b border-gray-100">
+            <div className="flex gap-2 items-center justify-center">
                 {prompts.map(prompt => (
                     <Tooltip key={prompt.id} title={prompt.description}>
                         <button
                             onClick={() => handleQuickPrompt(prompt.id)}
                             disabled={isProcessing === prompt.id}
-                            className="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center justify-center w-8 h-8 text-xl border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <span className="text-base">
-                                {prompt.id === 'summarize' && '📝'}
-                                {prompt.id === 'explain' && '💡'}
-                                {prompt.id === 'rephrase' && '✍️'}
-                                {prompt.id === 'grammar' && '✅'}
-                            </span>
-                            <span className="text-gray-700">
-                                {prompt.title}
-                                {isProcessing === prompt.id && '...'}
-                            </span>
+                            {prompt.id === 'summarize' && '📝'}
+                            {prompt.id === 'explain' && '💡'}
+                            {prompt.id === 'rephrase' && '✍️'}
+                            {prompt.id === 'grammar' && '✅'}
                         </button>
                     </Tooltip>
                 ))}

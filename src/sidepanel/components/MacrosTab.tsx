@@ -11,11 +11,11 @@ export const MacrosTab = () => {
         setIsProcessing(promptId);
 
         try {
-            // Get selected text from current tab
+            // Get selected text or page content from current tab
             const selectedText = await getTabSelection();
 
             if (!selectedText) {
-                alert('Please select some text on the webpage first!');
+                alert('Unable to get content from the page.');
                 setIsProcessing(null);
                 return;
             }
@@ -79,7 +79,7 @@ export const MacrosTab = () => {
             <div className="bg-white p-4 rounded shadow-sm">
                 <h3 className="font-bold mb-2 text-gray-700">Quick Actions</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                    Select text on the current webpage, then click an action below to process it.
+                    Click an action below to process selected text or the entire page content.
                 </p>
 
                 <div className="space-y-3">
@@ -113,9 +113,8 @@ export const MacrosTab = () => {
             <div className="bg-white p-4 rounded shadow-sm">
                 <h3 className="font-bold mb-2 text-gray-700">How to Use</h3>
                 <ol className="text-sm text-gray-600 space-y-2 list-decimal list-inside">
-                    <li>Select any text on a webpage</li>
-                    <li>A floating toolbar will appear above the selected text</li>
-                    <li>Click on any icon to perform that action</li>
+                    <li>Option 1: Select text on a webpage, then click any action above or use the floating toolbar</li>
+                    <li>Option 2: Without selecting text, click any action to process the entire page content</li>
                     <li>The result will appear in the Chat tab</li>
                 </ol>
             </div>

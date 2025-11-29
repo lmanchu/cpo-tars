@@ -1065,6 +1065,26 @@ function ConversationContent() {
     };
 
     function handleMessage(message: any) {
+        // Handle EXECUTE_PROMPT from toolbar
+        if (message.type === "EXECUTE_PROMPT") {
+            const { prompt, promptTitle, selectedText } = message.payload;
+            Logger.log('[handleMessage] EXECUTE_PROMPT received:', { promptTitle, textLength: selectedText?.length });
+
+            // Create a simple card object for the prompt execution
+            const promptCard = {
+                id: AskPromptId,
+                title: promptTitle,
+                text: prompt,
+                language: 'English',
+                imageKey: null,
+                itemType: PromptTypes.CUSTOM
+            };
+
+            // Execute the prompt directly (prompt already filled by toolbar)
+            goToAskEngine(prompt, { id: AskPromptId, title: promptTitle }, undefined);
+            return;
+        }
+
         switch (message.action) {
         case MESSAGE_ACTION_SET_QUOTING_SELECTION_TEXT:
             void showQuotingText(QuotingType.SELECTION, message.data);

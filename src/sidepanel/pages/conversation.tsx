@@ -65,6 +65,9 @@ import {UploadUtils} from "~utils/UploadUtils";
 import QuoteCardIcon from "data-base64:~assets/icon_quote_card.svg";
 import DownloadCardIcon from "data-base64:~assets/icon_download_card.svg";
 import FileBgIcon from "data-base64:~assets/icon_file_bg.svg";
+import { TEXT_PROMPTS, fillPromptTemplate } from "~utils/prompts";
+import { getTabSelection } from "~utils/tab-selection";
+import { Storage } from "@plasmohq/storage";
 let abortController:AbortController;
 
 let popIsShow = false;
@@ -865,6 +868,104 @@ export const UserMessage = ({message}: { message: ConversationMessage }) => {
     );
 };
 
+const QuickPromptButtons = memo(() => {
+    const [isProcessing, setIsProcessing] = useState<string | null>(null);
+    const storage = new Storage();
+
+    const handleQuickPrompt = async (promptId: string) => {
+        setIsProcessing(promptId);
+
+        try {
+            // Get selected text from current tab
+            const selectedText = await getTabSelection();
+
+            if (!selectedText) {
+                message.warning('Please select some text on the webpage first!');
+                setIsProcessing(null);
+                return;
+            }
+
+            const prompt = TEXT_PROMPTS.find(p => p.id === promptId);
+            if (!prompt) return;
+
+            // Get target language from settings
+            const userSettings = await storage.get<any>('userSettings');
+            const targetLanguage = userSettings?.targetLanguage || 'en';
+            const languageMap: Record<string, string> = {
+                'en': 'English',
+                'zh-TW': 'Traditional Chinese',
+                'ja': 'Japanese',
+                'ko': 'Korean',
+                'es': 'Spanish',
+                'fr': 'French'
+            };
+
+            // Fill template
+            const filledPrompt = fillPromptTemplate(
+                prompt.template,
+                selectedText,
+                languageMap[targetLanguage] || 'English'
+            );
+
+            // Store execution request and send message
+            await chrome.storage.local.set({
+                pendingPromptExecution: {
+                    prompt: filledPrompt,
+                    promptTitle: prompt.title,
+                    selectedText: selectedText,
+                    timestamp: Date.now()
+                }
+            });
+
+            // Send message to trigger execution
+            await chrome.runtime.sendMessage({
+                type: "EXECUTE_PROMPT",
+                payload: {
+                    prompt: filledPrompt,
+                    promptTitle: prompt.title,
+                    selectedText: selectedText
+                }
+            });
+
+        } catch (error) {
+            console.error('[QuickPromptButtons] Error executing prompt:', error);
+            message.error('Failed to execute prompt. Please try again.');
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
+    const prompts = TEXT_PROMPTS.filter(p => p.id !== 'ask-ai');
+
+    return (
+        <div className="px-4 py-2 bg-white border-b border-gray-100">
+            <div className="flex gap-2 items-center">
+                <span className="text-xs text-gray-500 mr-2">Quick Actions:</span>
+                {prompts.map(prompt => (
+                    <Tooltip key={prompt.id} title={prompt.description}>
+                        <button
+                            onClick={() => handleQuickPrompt(prompt.id)}
+                            disabled={isProcessing === prompt.id}
+                            className="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <span className="text-base">
+                                {prompt.id === 'summarize' && '📝'}
+                                {prompt.id === 'explain' && '💡'}
+                                {prompt.id === 'rephrase' && '✍️'}
+                                {prompt.id === 'grammar' && '✅'}
+                            </span>
+                            <span className="text-gray-700">
+                                {prompt.title}
+                                {isProcessing === prompt.id && '...'}
+                            </span>
+                        </button>
+                    </Tooltip>
+                ))}
+            </div>
+        </div>
+    );
+});
+
 const MessageList = memo(() => {
     const {messages} = useContext(ConversationContext);
     const quotaRef = useRef<HTMLImageElement>(null);
@@ -1466,6 +1567,7 @@ function ConversationContent() {
 
     return <Fragment>
         <MessageList/>
+        <QuickPromptButtons/>
         <div className={style.mainInputArea}>
             <div className={style.chatInputTopBar}>
                 <div className={'flex flex-row justify-start items-center'}>

@@ -1,18 +1,95 @@
-import React from 'react';
-import { TEXT_PROMPTS } from '~utils/prompts';
+import React, { useState } from 'react';
+import { TEXT_PROMPTS, fillPromptTemplate } from '~utils/prompts';
+import { getTabSelection } from '~utils/tab-selection';
+import { Storage } from "@plasmohq/storage";
 
 export const MacrosTab = () => {
+    const [isProcessing, setIsProcessing] = useState<string | null>(null);
+    const storage = new Storage();
+
+    const handlePromptClick = async (promptId: string) => {
+        setIsProcessing(promptId);
+
+        try {
+            // Get selected text from current tab
+            const selectedText = await getTabSelection();
+
+            if (!selectedText) {
+                alert('Please select some text on the webpage first!');
+                setIsProcessing(null);
+                return;
+            }
+
+            const prompt = TEXT_PROMPTS.find(p => p.id === promptId);
+            if (!prompt) return;
+
+            // Get target language from settings
+            const userSettings = await storage.get<any>('userSettings');
+            const targetLanguage = userSettings?.targetLanguage || 'en';
+            const languageMap: Record<string, string> = {
+                'en': 'English',
+                'zh-TW': 'Traditional Chinese',
+                'ja': 'Japanese',
+                'ko': 'Korean',
+                'es': 'Spanish',
+                'fr': 'French'
+            };
+
+            // Fill template
+            const filledPrompt = fillPromptTemplate(
+                prompt.template,
+                selectedText,
+                languageMap[targetLanguage] || 'English'
+            );
+
+            // Store execution request and send message
+            await chrome.storage.local.set({
+                pendingPromptExecution: {
+                    prompt: filledPrompt,
+                    promptTitle: prompt.title,
+                    selectedText: selectedText,
+                    timestamp: Date.now()
+                }
+            });
+
+            // Send message to trigger execution
+            await chrome.runtime.sendMessage({
+                type: "EXECUTE_PROMPT",
+                payload: {
+                    prompt: filledPrompt,
+                    promptTitle: prompt.title,
+                    selectedText: selectedText
+                }
+            });
+
+            // Switch to Chat tab
+            // We'll emit an event that App.tsx can listen to
+            window.dispatchEvent(new CustomEvent('switch-to-chat'));
+
+        } catch (error) {
+            console.error('[MacrosTab] Error executing prompt:', error);
+            alert('Failed to execute prompt. Please try again.');
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
     return (
         <div className="space-y-4">
             <div className="bg-white p-4 rounded shadow-sm">
                 <h3 className="font-bold mb-2 text-gray-700">Quick Actions</h3>
                 <p className="text-sm text-gray-600 mb-4">
-                    Select any text on a webpage to see these quick action buttons appear.
+                    Select text on the current webpage, then click an action below to process it.
                 </p>
 
                 <div className="space-y-3">
                     {TEXT_PROMPTS.filter(p => p.id !== 'ask-ai').map(prompt => (
-                        <div key={prompt.id} className="border border-gray-200 rounded-lg p-4 hover:border-primary-500 transition-colors">
+                        <button
+                            key={prompt.id}
+                            onClick={() => handlePromptClick(prompt.id)}
+                            disabled={isProcessing === prompt.id}
+                            className="w-full border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-left"
+                        >
                             <div className="flex items-start gap-3">
                                 <div className="text-2xl">
                                     {prompt.id === 'summarize' && '📝'}
@@ -21,11 +98,14 @@ export const MacrosTab = () => {
                                     {prompt.id === 'grammar' && '✅'}
                                 </div>
                                 <div className="flex-1">
-                                    <h4 className="font-semibold text-gray-800 mb-1">{prompt.title}</h4>
+                                    <h4 className="font-semibold text-gray-800 mb-1">
+                                        {prompt.title}
+                                        {isProcessing === prompt.id && ' (Processing...)'}
+                                    </h4>
                                     <p className="text-sm text-gray-600">{prompt.description}</p>
                                 </div>
                             </div>
-                        </div>
+                        </button>
                     ))}
                 </div>
             </div>

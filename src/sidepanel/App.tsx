@@ -30,7 +30,17 @@ export const App = () => {
 
         // Poll for history updates (simple way to sync)
         const interval = setInterval(loadData, 2000);
-        return () => clearInterval(interval);
+
+        // Listen for switch-to-chat event from MacrosTab
+        const handleSwitchToChat = () => {
+            setActiveTab('Chat');
+        };
+        window.addEventListener('switch-to-chat', handleSwitchToChat);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('switch-to-chat', handleSwitchToChat);
+        };
     }, []);
 
     const updateSettings = async (newSettings: Partial<UserSettings>) => {

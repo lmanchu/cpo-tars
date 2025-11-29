@@ -69,11 +69,8 @@ function PromptToolbar() {
             languageMap[targetLanguage] || 'English'
         );
 
-        // Open sidepanel and send prompt
+        // Send message to background to open sidepanel and execute prompt
         try {
-            await chrome.sidePanel.open({ windowId: (await chrome.windows.getCurrent()).id! });
-
-            // Send message to sidepanel to execute prompt
             await sendToBackground({
                 name: "execute-prompt",
                 body: {
@@ -85,7 +82,7 @@ function PromptToolbar() {
 
             setVisible(false);
         } catch (error) {
-            console.error("[PromptToolbar] Error opening sidepanel:", error);
+            console.error("[PromptToolbar] Error sending prompt:", error);
         }
     };
 

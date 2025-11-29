@@ -1045,6 +1045,24 @@ function ConversationContent() {
             }
         });
 
+        // Check for pending prompt execution when sidepanel opens
+        chrome.storage.local.get('pendingPromptExecution').then((result) => {
+            if (result.pendingPromptExecution) {
+                const { prompt, promptTitle, selectedText, timestamp } = result.pendingPromptExecution;
+
+                // Only process if less than 5 seconds old (to avoid stale requests)
+                if (Date.now() - timestamp < 5000) {
+                    Logger.log('[ConversationContent] Found pending prompt execution:', { promptTitle });
+
+                    // Execute the prompt
+                    goToAskEngine(prompt, { id: AskPromptId, title: promptTitle }, undefined);
+
+                    // Clear the pending prompt
+                    chrome.storage.local.remove('pendingPromptExecution');
+                }
+            }
+        });
+
         return () => {
             chrome.runtime.onMessage.removeListener(handleMessage);
             document.body.removeEventListener('mousedown', handleMouseDown);

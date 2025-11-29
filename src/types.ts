@@ -29,6 +29,7 @@ export interface UserSettings {
     theme: 'light' | 'dark' | 'system';
     targetLanguage: string;
     translationEngine: 'google' | 'gemini';
+    chatbotEngine: 'gemini';
     geminiApiKey?: string;
     isPro: boolean;
 }

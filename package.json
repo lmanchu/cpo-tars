@@ -91,6 +91,15 @@
       "browsingData",
       "storage"
     ],
+    "commands": {
+      "translate-page": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+A",
+          "mac": "Ctrl+Shift+A"
+        },
+        "description": "Translate entire page"
+      }
+    },
     "declarative_net_request": {
       "rule_resources": [
         {

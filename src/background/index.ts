@@ -178,3 +178,27 @@ async function openPanel(windowId: number | undefined) {
     void chrome.sidePanel.open({windowId: windowId!});
 }
 
+/**
+ * ============================================
+ * CPO TARS - Keyboard Shortcuts for Translation
+ * ============================================
+ */
+
+// Listen for keyboard shortcuts
+chrome.commands.onCommand.addListener(async (command) => {
+    Logger.log('[CPO TARS] Keyboard command received:', command)
+
+    if (command === 'translate-page') {
+        // Get active tab
+        const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+        if (tabs[0]?.id) {
+            // Send message to content script
+            void chrome.tabs.sendMessage(tabs[0].id, {
+                action: 'translate-page'
+            }).catch((error) => {
+                Logger.error('[CPO TARS] Failed to send translate-page message:', error)
+            })
+        }
+    }
+})
+

@@ -1,8 +1,8 @@
 {
-  "name": "brainy_ai",
-  "displayName": "BrainyAI",
-  "version": "0.0.7",
-  "description": "",
+  "name": "cpo-tars",
+  "displayName": "CPO TARS - AI Personal Assistant",
+  "version": "0.0.1",
+  "description": "Your Chief Personal Officer in Chrome: Translation, Prompt Macros, VLM Screenshot with Gemini AI",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.3.5",
+    "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^1.7.18",
     "@plasmohq/messaging": "^0.6.2",
     "@plasmohq/storage": "^1.9.3",
@@ -33,10 +34,12 @@
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "18.2.0",
+    "react-hotkeys-hook": "^5.2.1",
     "react-router-dom": "^6.22.3",
     "remark-gfm": "^3.0.1",
     "sort-by": "^1.2.0",
-    "websocket-as-promised": "^2.0.1"
+    "websocket-as-promised": "^2.0.1",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/js": "^8.56.0",

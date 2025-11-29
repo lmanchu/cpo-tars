@@ -34,3 +34,6 @@ dist/
 
 .idea
 
+
+# Development logs
+dev.log

@@ -1,6 +1,22 @@
 import { Logger } from "~utils/logger";
 
 /**
+ * Panel type enum
+ */
+export enum OpenPanelType {
+    SEARCH = "search",
+    AI_ASK = "ai_ask"
+}
+
+/**
+ * Interface for panel open data
+ */
+export interface IOpenPanelData {
+    openType: OpenPanelType;
+    data?: any;
+}
+
+/**
  * IAskAi - Data class for AI conversation requests
  */
 export class IAskAi {

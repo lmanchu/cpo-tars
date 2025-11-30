@@ -1,0 +1,72 @@
+{
+  "settings": {
+    "translation": {
+      "title": "翻譯設定",
+      "targetLanguage": "目標語言",
+      "translationEngine": "翻譯引擎",
+      "googleFree": "Google（免費）",
+      "gemini": "Gemini",
+      "usingGoogleApi": "使用免費 Google 翻譯 API"
+    },
+    "chatbot": {
+      "title": "聊天機器人設定",
+      "engine": "聊天機器人引擎",
+      "geminiFlash": "Gemini 2.0 Flash",
+      "onlyGeminiSupported": "目前聊天機器人僅支援 Gemini",
+      "apiKey": "Gemini API 金鑰",
+      "apiKeyPlaceholder": "輸入您的 Gemini API 金鑰",
+      "getApiKey": "從此處取得您的 API 金鑰",
+      "isPro": "我有專業版方案（無限配額）"
+    },
+    "general": {
+      "title": "一般設定",
+      "theme": "主題",
+      "light": "淺色",
+      "dark": "深色",
+      "system": "系統"
+    }
+  },
+  "languages": {
+    "en": "英文",
+    "zh-TW": "繁體中文",
+    "ja": "日文",
+    "ko": "韓文",
+    "es": "西班牙文",
+    "fr": "法文"
+  },
+  "common": {
+    "save": "儲存",
+    "cancel": "取消",
+    "close": "關閉",
+    "confirm": "確認",
+    "delete": "刪除",
+    "edit": "編輯",
+    "loading": "載入中...",
+    "error": "錯誤",
+    "success": "成功"
+  },
+  "prompts": {
+    "summarize": {
+      "title": "摘要",
+      "description": "摘要當前頁面"
+    },
+    "explain": {
+      "title": "解釋",
+      "description": "解釋內容"
+    },
+    "rewrite": {
+      "title": "改寫",
+      "description": "改寫並改進"
+    },
+    "verify": {
+      "title": "驗證",
+      "description": "驗證事實和資訊"
+    }
+  },
+  "messages": {
+    "promptExecuted": "提示執行成功！",
+    "executionFailed": "執行提示失敗",
+    "unknownError": "未知錯誤",
+    "pageContentWithVisuals": "頁面內容（含視覺元素）"
+  }
+}

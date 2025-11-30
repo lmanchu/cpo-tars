@@ -1,0 +1,72 @@
+{
+  "settings": {
+    "translation": {
+      "title": "Translation Settings",
+      "targetLanguage": "Target Language",
+      "translationEngine": "Translation Engine",
+      "googleFree": "Google (Free)",
+      "gemini": "Gemini",
+      "usingGoogleApi": "Using free Google Translate API"
+    },
+    "chatbot": {
+      "title": "Chatbot Settings",
+      "engine": "Chatbot Engine",
+      "geminiFlash": "Gemini 2.0 Flash",
+      "onlyGeminiSupported": "Currently only Gemini is supported for chatbot",
+      "apiKey": "Gemini API Key",
+      "apiKeyPlaceholder": "Enter your Gemini API Key",
+      "getApiKey": "Get your API key from",
+      "isPro": "I have Pro Plan (Unlimited Quota)"
+    },
+    "general": {
+      "title": "General Settings",
+      "theme": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
+  },
+  "languages": {
+    "en": "English",
+    "zh-TW": "Traditional Chinese",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "es": "Spanish",
+    "fr": "French"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "prompts": {
+    "summarize": {
+      "title": "Summarize",
+      "description": "Summarize the current page"
+    },
+    "explain": {
+      "title": "Explain",
+      "description": "Explain the content"
+    },
+    "rewrite": {
+      "title": "Rewrite",
+      "description": "Rewrite and improve"
+    },
+    "verify": {
+      "title": "Verify",
+      "description": "Verify facts and information"
+    }
+  },
+  "messages": {
+    "promptExecuted": "Prompt executed successfully!",
+    "executionFailed": "Failed to execute prompt",
+    "unknownError": "Unknown error",
+    "pageContentWithVisuals": "Page content (with visuals)"
+  }
+}

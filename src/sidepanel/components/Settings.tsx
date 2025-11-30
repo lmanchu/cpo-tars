@@ -1,4 +1,6 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '~theme/ThemeProvider';
 import type { UserSettings } from '~types';
 
 interface SettingsProps {
@@ -7,81 +9,109 @@ interface SettingsProps {
 }
 
 export const Settings = ({ settings, onUpdate }: SettingsProps) => {
+    const { t } = useTranslation();
+    const { theme, setTheme } = useTheme();
+
+    const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+        setTheme(newTheme);
+        onUpdate({ theme: newTheme });
+    };
+
     return (
         <div className="space-y-6">
             {/* Translation Settings */}
-            <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold mb-4 text-gray-700 border-b pb-2">Translation Settings</h3>
+            <div className="p-4 rounded" style={{ backgroundColor: 'var(--bg-primary)', boxShadow: 'var(--shadow-sm)' }}>
+                <h3 className="font-bold mb-4 pb-2" style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--border-primary)' }}>{t('settings.translation.title')}</h3>
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm text-gray-600 mb-2">Target Language</label>
+                        <label className="block text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>{t('settings.translation.targetLanguage')}</label>
                         <select
-                            className="w-full text-sm border rounded p-2"
+                            className="w-full text-sm rounded p-2"
+                            style={{
+                                backgroundColor: 'var(--input-bg)',
+                                border: '1px solid var(--input-border)',
+                                color: 'var(--text-primary)'
+                            }}
                             value={settings.targetLanguage}
                             onChange={(e) => onUpdate({ targetLanguage: e.target.value })}
                         >
-                            <option value="en">English</option>
-                            <option value="zh-TW">Traditional Chinese</option>
-                            <option value="ja">Japanese</option>
-                            <option value="ko">Korean</option>
-                            <option value="es">Spanish</option>
-                            <option value="fr">French</option>
+                            <option value="en">{t('languages.en')}</option>
+                            <option value="zh-TW">{t('languages.zh-TW')}</option>
+                            <option value="ja">{t('languages.ja')}</option>
+                            <option value="ko">{t('languages.ko')}</option>
+                            <option value="es">{t('languages.es')}</option>
+                            <option value="fr">{t('languages.fr')}</option>
                         </select>
                     </div>
 
                     <div>
-                        <label className="block text-sm text-gray-600 mb-2">Translation Engine</label>
+                        <label className="block text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>{t('settings.translation.translationEngine')}</label>
                         <div className="flex gap-3">
                             <button
-                                className={`flex-1 py-2 px-3 text-sm rounded border ${settings.translationEngine === 'google' ? 'bg-primary-50 border-primary-500 text-primary-700 font-medium' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
+                                className={`flex-1 py-2 px-3 text-sm rounded border ${settings.translationEngine === 'google' ? 'bg-primary-50 border-primary-500 text-primary-700 font-medium' : ''}`}
+                                style={settings.translationEngine !== 'google' ? {
+                                    backgroundColor: 'var(--bg-tertiary)',
+                                    border: '1px solid var(--border-primary)',
+                                    color: 'var(--text-secondary)'
+                                } : {}}
                                 onClick={() => onUpdate({ translationEngine: 'google' })}
                             >
-                                Google (Free)
+                                {t('settings.translation.googleFree')}
                             </button>
                             <button
-                                className={`flex-1 py-2 px-3 text-sm rounded border ${settings.translationEngine === 'gemini' ? 'bg-primary-50 border-primary-500 text-primary-700 font-medium' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
+                                className={`flex-1 py-2 px-3 text-sm rounded border ${settings.translationEngine === 'gemini' ? 'bg-primary-50 border-primary-500 text-primary-700 font-medium' : ''}`}
+                                style={settings.translationEngine !== 'gemini' ? {
+                                    backgroundColor: 'var(--bg-tertiary)',
+                                    border: '1px solid var(--border-primary)',
+                                    color: 'var(--text-secondary)'
+                                } : {}}
                                 onClick={() => onUpdate({ translationEngine: 'gemini' })}
                             >
-                                Gemini
+                                {t('settings.translation.gemini')}
                             </button>
                         </div>
                         {settings.translationEngine === 'google' && (
-                            <p className="text-xs text-gray-500 mt-2">Using free Google Translate API</p>
+                            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>{t('settings.translation.usingGoogleApi')}</p>
                         )}
                     </div>
                 </div>
             </div>
 
             {/* Chatbot Settings */}
-            <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold mb-4 text-gray-700 border-b pb-2">Chatbot Settings</h3>
+            <div className="p-4 rounded" style={{ backgroundColor: 'var(--bg-primary)', boxShadow: 'var(--shadow-sm)' }}>
+                <h3 className="font-bold mb-4 pb-2" style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--border-primary)' }}>{t('settings.chatbot.title')}</h3>
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm text-gray-600 mb-2">Chatbot Engine</label>
+                        <label className="block text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>{t('settings.chatbot.engine')}</label>
                         <div className="flex gap-3">
                             <button
                                 className="flex-1 py-2 px-3 text-sm rounded border bg-primary-50 border-primary-500 text-primary-700 font-medium"
                                 disabled
                             >
-                                Gemini 2.0 Flash
+                                {t('settings.chatbot.geminiFlash')}
                             </button>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">Currently only Gemini is supported for chatbot</p>
+                        <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>{t('settings.chatbot.onlyGeminiSupported')}</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm text-gray-600 mb-2">Gemini API Key</label>
+                        <label className="block text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>{t('settings.chatbot.apiKey')}</label>
                         <input
                             type="password"
-                            className="w-full text-sm border rounded p-2"
-                            placeholder="Enter your Gemini API Key"
+                            className="w-full text-sm rounded p-2"
+                            style={{
+                                backgroundColor: 'var(--input-bg)',
+                                border: '1px solid var(--input-border)',
+                                color: 'var(--text-primary)'
+                            }}
+                            placeholder={t('settings.chatbot.apiKeyPlaceholder')}
                             value={settings.geminiApiKey || ''}
                             onChange={(e) => onUpdate({ geminiApiKey: e.target.value })}
                         />
-                        <p className="text-xs text-gray-500 mt-1">
-                            Get your API key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">Google AI Studio</a>
+                        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                            {t('settings.chatbot.getApiKey')} <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">Google AI Studio</a>
                         </p>
                     </div>
 
@@ -92,26 +122,31 @@ export const Settings = ({ settings, onUpdate }: SettingsProps) => {
                             checked={settings.isPro}
                             onChange={(e) => onUpdate({ isPro: e.target.checked })}
                         />
-                        <label htmlFor="isPro" className="text-sm text-gray-600">I have Pro Plan (Unlimited Quota)</label>
+                        <label htmlFor="isPro" className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t('settings.chatbot.isPro')}</label>
                     </div>
                 </div>
             </div>
 
             {/* General Settings */}
-            <div className="bg-white p-4 rounded shadow-sm">
-                <h3 className="font-bold mb-4 text-gray-700 border-b pb-2">General Settings</h3>
+            <div className="p-4 rounded" style={{ backgroundColor: 'var(--bg-primary)', boxShadow: 'var(--shadow-sm)' }}>
+                <h3 className="font-bold mb-4 pb-2" style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--border-primary)' }}>{t('settings.general.title')}</h3>
 
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-sm text-gray-600 mb-2">Theme</label>
+                        <label className="block text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>{t('settings.general.theme')}</label>
                         <select
-                            className="w-full text-sm border rounded p-2"
-                            value={settings.theme}
-                            onChange={(e) => onUpdate({ theme: e.target.value as 'light' | 'dark' | 'system' })}
+                            className="w-full text-sm rounded p-2"
+                            style={{
+                                backgroundColor: 'var(--input-bg)',
+                                border: '1px solid var(--input-border)',
+                                color: 'var(--text-primary)'
+                            }}
+                            value={theme}
+                            onChange={(e) => handleThemeChange(e.target.value as 'light' | 'dark' | 'system')}
                         >
-                            <option value="light">Light</option>
-                            <option value="dark">Dark</option>
-                            <option value="system">System</option>
+                            <option value="light">{t('settings.general.light')}</option>
+                            <option value="dark">{t('settings.general.dark')}</option>
+                            <option value="system">{t('settings.general.system')}</option>
                         </select>
                     </div>
                 </div>

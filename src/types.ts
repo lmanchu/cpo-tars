@@ -28,6 +28,7 @@ export interface VLMRecord {
 export interface UserSettings {
     theme: 'light' | 'dark' | 'system';
     targetLanguage: string;
+    uiLanguage?: string; // UI language (defaults to targetLanguage if not set)
     translationEngine: 'google' | 'gemini';
     chatbotEngine: 'gemini';
     geminiApiKey?: string;

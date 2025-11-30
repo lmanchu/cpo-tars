@@ -66,7 +66,7 @@ import QuoteCardIcon from "data-base64:~assets/icon_quote_card.svg";
 import DownloadCardIcon from "data-base64:~assets/icon_download_card.svg";
 import FileBgIcon from "data-base64:~assets/icon_file_bg.svg";
 import { TEXT_PROMPTS, fillPromptTemplate } from "~utils/prompts";
-import { getTabSelection } from "~utils/tab-selection";
+import { getTabSelection, capturePageScreenshot } from "~utils/tab-selection";
 import { Storage } from "@plasmohq/storage";
 let abortController:AbortController;
 
@@ -873,20 +873,30 @@ const QuickPromptButtons = memo(() => {
     const storage = new Storage();
 
     const handleQuickPrompt = async (promptId: string) => {
+        console.log('[QuickPromptButtons] Button clicked:', promptId);
         setIsProcessing(promptId);
 
         try {
-            // Get selected text or page content from current tab
-            const selectedText = await getTabSelection();
+            console.log('[QuickPromptButtons] Capturing page screenshot...');
+            // Capture page screenshot
+            const screenshotBase64 = await capturePageScreenshot();
 
-            if (!selectedText) {
-                message.warning('Unable to get content from the page.');
+            if (!screenshotBase64) {
+                console.error('[QuickPromptButtons] Failed to capture screenshot');
+                message.error('Failed to capture page screenshot.');
                 setIsProcessing(null);
                 return;
             }
 
+            console.log('[QuickPromptButtons] Screenshot captured successfully');
+
             const prompt = TEXT_PROMPTS.find(p => p.id === promptId);
-            if (!prompt) return;
+            if (!prompt) {
+                console.error('[QuickPromptButtons] Prompt not found:', promptId);
+                return;
+            }
+
+            console.log('[QuickPromptButtons] Found prompt:', prompt.title);
 
             // Get target language from settings
             const userSettings = await storage.get<any>('userSettings');
@@ -900,36 +910,35 @@ const QuickPromptButtons = memo(() => {
                 'fr': 'French'
             };
 
-            // Fill template
-            const filledPrompt = fillPromptTemplate(
+            // Create prompt with the screenshot context
+            const promptText = fillPromptTemplate(
                 prompt.template,
-                selectedText,
+                "the webpage screenshot",
                 languageMap[targetLanguage] || 'English'
             );
 
-            // Store execution request and send message
-            await chrome.storage.local.set({
-                pendingPromptExecution: {
-                    prompt: filledPrompt,
+            console.log('[QuickPromptButtons] Prompt text:', promptText);
+
+            const screenshotDataUrl = `data:image/png;base64,${screenshotBase64}`;
+
+            console.log('[QuickPromptButtons] Sending runtime message with screenshot...');
+
+            // Send message to trigger execution with screenshot
+            await chrome.runtime.sendMessage({
+                type: "EXECUTE_PROMPT_WITH_SCREENSHOT",
+                payload: {
+                    prompt: promptText,
                     promptTitle: prompt.title,
-                    selectedText: selectedText,
-                    timestamp: Date.now()
+                    screenshot: screenshotDataUrl
                 }
             });
 
-            // Send message to trigger execution
-            await chrome.runtime.sendMessage({
-                type: "EXECUTE_PROMPT",
-                payload: {
-                    prompt: filledPrompt,
-                    promptTitle: prompt.title,
-                    selectedText: selectedText
-                }
-            });
+            console.log('[QuickPromptButtons] Message sent successfully!');
 
         } catch (error) {
             console.error('[QuickPromptButtons] Error executing prompt:', error);
-            message.error('Failed to execute prompt. Please try again.');
+            console.error('[QuickPromptButtons] Error stack:', error.stack);
+            message.error(`Failed to execute prompt: ${error.message}`);
         } finally {
             setIsProcessing(null);
         }
@@ -1177,6 +1186,33 @@ function ConversationContent() {
     };
 
     function handleMessage(message: any) {
+        // Handle EXECUTE_PROMPT_WITH_SCREENSHOT from QuickPromptButtons
+        if (message.type === "EXECUTE_PROMPT_WITH_SCREENSHOT") {
+            const { prompt, promptTitle, screenshot } = message.payload;
+            Logger.log('[handleMessage] EXECUTE_PROMPT_WITH_SCREENSHOT received:', { promptTitle });
+
+            // Convert screenshot data URL to File
+            const base64Data = screenshot.split(',')[1];
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'image/png' });
+            const screenshotFile = new File([blob], 'page-screenshot.png', { type: 'image/png' });
+
+            // Execute the prompt with screenshot as image upload
+            goToAskEngine(
+                prompt,
+                { id: AskPromptId, title: promptTitle },
+                undefined,
+                true, // isUploadFile
+                [screenshot, 'page-screenshot.png', new Map(), FileTypes.Image, screenshotFile]
+            );
+            return;
+        }
+
         // Handle EXECUTE_PROMPT from toolbar
         if (message.type === "EXECUTE_PROMPT") {
             const { prompt, promptTitle, selectedText } = message.payload;

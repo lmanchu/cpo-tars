@@ -922,33 +922,17 @@ const QuickPromptButtons = memo(() => {
                 selectedText = pageContext.text;
             }
 
-            console.log('[QuickPromptButtons] Storing prompt execution data...');
+            console.log('[QuickPromptButtons] Emitting execute-prompt event...');
 
-            // Store with full pageContext (includes screenshot if vision mode)
-            await chrome.storage.local.set({
-                pendingPromptExecution: {
-                    prompt: filledPrompt,
-                    promptTitle: prompt.title,
-                    selectedText: selectedText,
-                    pageContext: pageContext,
-                    timestamp: Date.now()
-                }
+            // Use EventBus instead of chrome.runtime.sendMessage to ensure the message is received
+            eventBus.emit('execute-prompt', {
+                prompt: filledPrompt,
+                promptTitle: prompt.title,
+                selectedText: selectedText,
+                pageContext: pageContext
             });
 
-            console.log('[QuickPromptButtons] Sending EXECUTE_PROMPT message...');
-
-            // Send message using same format as MacrosTab
-            await chrome.runtime.sendMessage({
-                type: "EXECUTE_PROMPT",
-                payload: {
-                    prompt: filledPrompt,
-                    promptTitle: prompt.title,
-                    selectedText: selectedText,
-                    pageContext: pageContext
-                }
-            });
-
-            console.log('[QuickPromptButtons] Prompt executed successfully!');
+            console.log('[QuickPromptButtons] Event emitted successfully!');
 
         } catch (error) {
             console.error('[QuickPromptButtons] Error executing prompt:', error);
@@ -1163,17 +1147,89 @@ function ConversationContent() {
             }
         });
 
+        // Add EventBus listener for execute-prompt events from QuickPromptButtons
+        const handleExecutePrompt = ({ prompt, promptTitle, selectedText, pageContext }) => {
+            Logger.log('[ConversationContent] execute-prompt event received:', {
+                promptTitle,
+                hasPageContext: !!pageContext,
+                isVisionMode: pageContext?.type === 'vision'
+            });
+
+            // Process the same way as handleMessage does
+            if (pageContext && pageContext.type === 'vision' && pageContext.screenshot) {
+                Logger.log('[ConversationContent] Processing vision mode with screenshot');
+
+                // Convert screenshot data URL to File
+                const screenshot = pageContext.screenshot;
+                const base64Data = screenshot.split(',')[1];
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'image/png' });
+                const screenshotFile = new File([blob], 'page-screenshot.png', { type: 'image/png' });
+
+                // Execute with screenshot as image upload
+                goToAskEngine(
+                    prompt,
+                    { id: AskPromptId, title: promptTitle },
+                    undefined,
+                    true, // isUploadFile
+                    [screenshot, 'page-screenshot.png', new Map(), FileTypes.Image, screenshotFile]
+                );
+            } else {
+                // Text mode or no pageContext - execute normally
+                Logger.log('[ConversationContent] Processing text mode');
+                goToAskEngine(prompt, { id: AskPromptId, title: promptTitle }, undefined);
+            }
+        };
+
+        eventBus.on('execute-prompt', handleExecutePrompt);
+
         // Check for pending prompt execution when sidepanel opens
         chrome.storage.local.get('pendingPromptExecution').then((result) => {
             if (result.pendingPromptExecution) {
-                const { prompt, promptTitle, selectedText, timestamp } = result.pendingPromptExecution;
+                const { prompt, promptTitle, selectedText, pageContext, timestamp } = result.pendingPromptExecution;
 
                 // Only process if less than 5 seconds old (to avoid stale requests)
                 if (Date.now() - timestamp < 5000) {
-                    Logger.log('[ConversationContent] Found pending prompt execution:', { promptTitle });
+                    Logger.log('[ConversationContent] Found pending prompt execution:', {
+                        promptTitle,
+                        hasPageContext: !!pageContext,
+                        isVisionMode: pageContext?.type === 'vision'
+                    });
 
-                    // Execute the prompt
-                    goToAskEngine(prompt, { id: AskPromptId, title: promptTitle }, undefined);
+                    // Check if we have vision mode with screenshot
+                    if (pageContext && pageContext.type === 'vision' && pageContext.screenshot) {
+                        Logger.log('[ConversationContent] Processing vision mode with screenshot');
+
+                        // Convert screenshot data URL to File
+                        const screenshot = pageContext.screenshot;
+                        const base64Data = screenshot.split(',')[1];
+                        const byteCharacters = atob(base64Data);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                            byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], { type: 'image/png' });
+                        const screenshotFile = new File([blob], 'page-screenshot.png', { type: 'image/png' });
+
+                        // Execute with screenshot as image upload
+                        goToAskEngine(
+                            prompt,
+                            { id: AskPromptId, title: promptTitle },
+                            undefined,
+                            true, // isUploadFile
+                            [screenshot, 'page-screenshot.png', new Map(), FileTypes.Image, screenshotFile]
+                        );
+                    } else {
+                        // Text mode or no pageContext - execute normally
+                        Logger.log('[ConversationContent] Processing text mode');
+                        goToAskEngine(prompt, { id: AskPromptId, title: promptTitle }, undefined);
+                    }
 
                     // Clear the pending prompt
                     chrome.storage.local.remove('pendingPromptExecution');
@@ -1184,6 +1240,7 @@ function ConversationContent() {
         return () => {
             chrome.runtime.onMessage.removeListener(handleMessage);
             document.body.removeEventListener('mousedown', handleMouseDown);
+            eventBus.off('execute-prompt', handleExecutePrompt);
         };
     }, []);
 

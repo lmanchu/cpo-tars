@@ -1,7 +1,7 @@
 {
   "name": "cpo-tars",
   "displayName": "CPO TARS - AI Personal Assistant",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Your Chief Personal Officer in Chrome: Translation, Prompt Macros, VLM Screenshot with Gemini AI",
   "scripts": {
     "dev": "plasmo dev",
@@ -78,8 +78,7 @@
       }
     ],
     "host_permissions": [
-      "https://*/*",
-      "wss://*/*"
+      "<all_urls>"
     ],
     "action": {
       "default_title": "CPO TARS"
@@ -88,8 +87,10 @@
       "declarativeNetRequest",
       "scripting",
       "tabs",
+      "activeTab",
       "browsingData",
-      "storage"
+      "storage",
+      "debugger"
     ],
     "commands": {
       "translate-page": {

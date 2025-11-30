@@ -1,15 +1,21 @@
 import type { PlasmoMessaging } from "@plasmohq/messaging";
+import type { PageContext } from "~utils/enhanced-observation";
 
 export interface ExecutePromptRequest {
     prompt: string;
     promptTitle: string;
     selectedText: string;
+    pageContext?: PageContext;  // Optional: Enhanced page context with vision support
 }
 
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
-    const { prompt, promptTitle, selectedText } = req.body as ExecutePromptRequest;
+    const { prompt, promptTitle, selectedText, pageContext } = req.body as ExecutePromptRequest;
 
-    console.log("[execute-prompt] Received request:", { promptTitle, textLength: selectedText.length });
+    console.log("[execute-prompt] Received request:", {
+        promptTitle,
+        textLength: selectedText.length,
+        hasVisionContext: pageContext?.type === 'vision'
+    });
 
     // Open sidepanel first
     try {
@@ -26,6 +32,7 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
             prompt,
             promptTitle,
             selectedText,
+            pageContext,  // Include vision context if present
             timestamp: Date.now()
         }
     });
@@ -38,7 +45,8 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
                 payload: {
                     prompt,
                     promptTitle,
-                    selectedText
+                    selectedText,
+                    pageContext
                 }
             });
             console.log("[execute-prompt] Message sent to sidepanel");

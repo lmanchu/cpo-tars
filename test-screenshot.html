@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPO TARS Screenshot Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: #f4f4f4;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .instructions {
+            background: #fff3cd;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .status {
+            background: #d1ecf1;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #17a2b8;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .long-content {
+            height: 2000px;
+            background: linear-gradient(to bottom,
+                #fff 0%,
+                #f0f0f0 25%,
+                #e0e0e0 50%,
+                #d0d0d0 75%,
+                #c0c0c0 100%
+            );
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .marker {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            margin: 200px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 CPO TARS Full-Page Screenshot Test</h1>
+
+    <div class="status">
+        <h2>✅ Test Page Loaded Successfully</h2>
+        <p>This page is designed to test the full-page screenshot functionality using Chrome DevTools Protocol (CDP).</p>
+    </div>
+
+    <div class="instructions">
+        <h2>📋 Testing Instructions</h2>
+        <ol>
+            <li>Make sure the <strong>CPO TARS</strong> extension is loaded in Chrome</li>
+            <li>Make sure you have configured your <strong>Gemini API key</strong> in the extension settings</li>
+            <li>Open the CPO TARS sidepanel by clicking the extension icon</li>
+            <li>Switch to the <strong>Chat</strong> tab in the sidepanel</li>
+            <li>Click one of the quick prompt buttons: <code>📝</code> <code>💡</code> <code>✍️</code> <code>✅</code></li>
+            <li>The extension should:
+                <ul>
+                    <li>Capture a full-page screenshot of this page (including the content below the fold)</li>
+                    <li>Send it to Gemini AI for analysis</li>
+                    <li>Display the result in the chat</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 What to Check</h2>
+        <p>Open the browser console (<code>F12</code> → Console tab) to see detailed logs:</p>
+        <ul>
+            <li><code>[Background] Starting full-page screenshot capture...</code></li>
+            <li><code>[Background] ✓ Debugger attached successfully</code></li>
+            <li><code>[Background] ✓ Full-page screenshot captured successfully</code></li>
+            <li><code>[QuickPromptButtons] Screenshot captured successfully</code></li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>⚠️ Common Issues</h2>
+        <ul>
+            <li><strong>No active tab found:</strong> Make sure this page is the active tab</li>
+            <li><strong>Restricted page error:</strong> This shouldn't happen on this HTML page, but it can occur on <code>chrome://</code>, <code>chrome-extension://</code>, or Chrome Web Store pages</li>
+            <li><strong>Debugger already attached:</strong> Close DevTools if it's open, or detach any other debuggers</li>
+            <li><strong>Missing Gemini API key:</strong> Go to Settings (gear icon) and add your API key</li>
+        </ul>
+    </div>
+
+    <!-- Long content to test full-page capture -->
+    <div class="long-content">
+        <h2>📏 Long Content Section (Tests Beyond-Viewport Capture)</h2>
+        <p>This section extends beyond the viewport to test that the full-page screenshot captures content that requires scrolling.</p>
+
+        <div class="marker">⬆️ TOP OF LONG CONTENT</div>
+
+        <div class="marker">📍 MARKER 1 - If you can see this in the screenshot, the capture is working!</div>
+
+        <div class="marker">📍 MARKER 2 - This should also be visible</div>
+
+        <div class="marker">📍 MARKER 3 - Getting closer to the bottom</div>
+
+        <div class="marker">📍 MARKER 4 - Almost there</div>
+
+        <div class="marker">⬇️ BOTTOM OF LONG CONTENT - Success! Full page captured!</div>
+    </div>
+
+    <div class="test-section">
+        <h2>✨ Expected Result</h2>
+        <p>After clicking a quick prompt button, you should see:</p>
+        <ol>
+            <li>A brief loading state on the button</li>
+            <li>A new message in the chat with your prompt</li>
+            <li>Gemini's response analyzing this entire page, including the markers in the long content section</li>
+        </ol>
+    </div>
+
+    <div class="status">
+        <h2>🎯 Success Criteria</h2>
+        <p>The test is successful if:</p>
+        <ul>
+            <li>✅ No errors in the console</li>
+            <li>✅ Gemini can describe content from both the top and bottom of this page</li>
+            <li>✅ Gemini mentions the markers in the long content section</li>
+        </ul>
+    </div>
+
+    <footer style="text-align: center; margin-top: 50px; padding: 20px; background: #333; color: white;">
+        <p>CPO TARS - Your Chief Personal Officer in Chrome</p>
+        <p style="font-size: 0.9em; opacity: 0.8;">Full-Page Screenshot Test Page v1.0</p>
+    </footer>
+</body>
+</html>

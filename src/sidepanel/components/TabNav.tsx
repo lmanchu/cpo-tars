@@ -6,7 +6,7 @@ interface TabNavProps {
 }
 
 export const TabNav = ({ activeTab, onTabChange }: TabNavProps) => {
-    const tabs = ['Chat', 'Translation', 'Macros', 'VLM', 'Settings'];
+    const tabs = ['Chat', 'Macros', 'VLM', 'Settings'];
     return (
         <div className="flex border-b bg-white">
             {tabs.map(tab => (

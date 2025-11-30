@@ -65,8 +65,9 @@ import {UploadUtils} from "~utils/UploadUtils";
 import QuoteCardIcon from "data-base64:~assets/icon_quote_card.svg";
 import DownloadCardIcon from "data-base64:~assets/icon_download_card.svg";
 import FileBgIcon from "data-base64:~assets/icon_file_bg.svg";
-import { TEXT_PROMPTS, fillPromptTemplate } from "~utils/prompts";
+import { TEXT_PROMPTS, fillPromptTemplate, requiresVision } from "~utils/prompts";
 import { getTabSelection, capturePageScreenshot } from "~utils/tab-selection";
+import { getEnhancedPageContext, buildVisionPrompt } from "~utils/enhanced-observation";
 import { Storage } from "@plasmohq/storage";
 let abortController:AbortController;
 
@@ -877,19 +878,6 @@ const QuickPromptButtons = memo(() => {
         setIsProcessing(promptId);
 
         try {
-            console.log('[QuickPromptButtons] Capturing page screenshot...');
-            // Capture page screenshot
-            const screenshotBase64 = await capturePageScreenshot();
-
-            if (!screenshotBase64) {
-                console.error('[QuickPromptButtons] Failed to capture screenshot');
-                message.error('Failed to capture page screenshot.');
-                setIsProcessing(null);
-                return;
-            }
-
-            console.log('[QuickPromptButtons] Screenshot captured successfully');
-
             const prompt = TEXT_PROMPTS.find(p => p.id === promptId);
             if (!prompt) {
                 console.error('[QuickPromptButtons] Prompt not found:', promptId);
@@ -909,36 +897,63 @@ const QuickPromptButtons = memo(() => {
                 'es': 'Spanish',
                 'fr': 'French'
             };
+            const targetLangName = languageMap[targetLanguage] || 'English';
 
-            // Create prompt with the screenshot context
-            const promptText = fillPromptTemplate(
-                prompt.template,
-                "the webpage screenshot",
-                languageMap[targetLanguage] || 'English'
-            );
+            // Use smart vision-enhanced page context (same as MacrosTab)
+            console.log('[QuickPromptButtons] Getting enhanced page context...');
+            const forceVision = requiresVision(promptId);
+            const pageContext = await getEnhancedPageContext(forceVision, true);
 
-            console.log('[QuickPromptButtons] Prompt text:', promptText);
+            console.log('[QuickPromptButtons] Page context type:', pageContext.type);
 
-            const screenshotDataUrl = `data:image/png;base64,${screenshotBase64}`;
+            let filledPrompt: string;
+            let selectedText: string;
 
-            console.log('[QuickPromptButtons] Sending runtime message with screenshot...');
+            if (pageContext.type === 'vision') {
+                // VISION MODE: Use screenshot + DOM
+                console.log('[QuickPromptButtons] Using VISION mode');
+                const basePrompt = fillPromptTemplate(prompt.template, '', targetLangName);
+                filledPrompt = buildVisionPrompt(basePrompt, pageContext, targetLangName);
+                selectedText = pageContext.dom?.elements?.map(el => el.text).join(' ') || 'Page content (with visuals)';
+            } else {
+                // TEXT MODE: Traditional approach
+                console.log('[QuickPromptButtons] Using TEXT mode');
+                filledPrompt = fillPromptTemplate(prompt.template, pageContext.text, targetLangName);
+                selectedText = pageContext.text;
+            }
 
-            // Send message to trigger execution with screenshot
-            await chrome.runtime.sendMessage({
-                type: "EXECUTE_PROMPT_WITH_SCREENSHOT",
-                payload: {
-                    prompt: promptText,
+            console.log('[QuickPromptButtons] Storing prompt execution data...');
+
+            // Store with full pageContext (includes screenshot if vision mode)
+            await chrome.storage.local.set({
+                pendingPromptExecution: {
+                    prompt: filledPrompt,
                     promptTitle: prompt.title,
-                    screenshot: screenshotDataUrl
+                    selectedText: selectedText,
+                    pageContext: pageContext,
+                    timestamp: Date.now()
                 }
             });
 
-            console.log('[QuickPromptButtons] Message sent successfully!');
+            console.log('[QuickPromptButtons] Sending EXECUTE_PROMPT message...');
+
+            // Send message using same format as MacrosTab
+            await chrome.runtime.sendMessage({
+                type: "EXECUTE_PROMPT",
+                payload: {
+                    prompt: filledPrompt,
+                    promptTitle: prompt.title,
+                    selectedText: selectedText,
+                    pageContext: pageContext
+                }
+            });
+
+            console.log('[QuickPromptButtons] Prompt executed successfully!');
 
         } catch (error) {
             console.error('[QuickPromptButtons] Error executing prompt:', error);
-            console.error('[QuickPromptButtons] Error stack:', error.stack);
-            message.error(`Failed to execute prompt: ${error.message}`);
+            console.error('[QuickPromptButtons] Error stack:', error?.stack);
+            message.error(`Failed to execute prompt: ${error?.message || 'Unknown error'}`);
         } finally {
             setIsProcessing(null);
         }
@@ -1186,50 +1201,45 @@ function ConversationContent() {
     };
 
     function handleMessage(message: any) {
-        // Handle EXECUTE_PROMPT_WITH_SCREENSHOT from QuickPromptButtons
-        if (message.type === "EXECUTE_PROMPT_WITH_SCREENSHOT") {
-            const { prompt, promptTitle, screenshot } = message.payload;
-            Logger.log('[handleMessage] EXECUTE_PROMPT_WITH_SCREENSHOT received:', { promptTitle });
-
-            // Convert screenshot data URL to File
-            const base64Data = screenshot.split(',')[1];
-            const byteCharacters = atob(base64Data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'image/png' });
-            const screenshotFile = new File([blob], 'page-screenshot.png', { type: 'image/png' });
-
-            // Execute the prompt with screenshot as image upload
-            goToAskEngine(
-                prompt,
-                { id: AskPromptId, title: promptTitle },
-                undefined,
-                true, // isUploadFile
-                [screenshot, 'page-screenshot.png', new Map(), FileTypes.Image, screenshotFile]
-            );
-            return;
-        }
-
-        // Handle EXECUTE_PROMPT from toolbar
+        // Handle EXECUTE_PROMPT from toolbar/macros/quick buttons
         if (message.type === "EXECUTE_PROMPT") {
-            const { prompt, promptTitle, selectedText } = message.payload;
-            Logger.log('[handleMessage] EXECUTE_PROMPT received:', { promptTitle, textLength: selectedText?.length });
+            const { prompt, promptTitle, selectedText, pageContext } = message.payload;
+            Logger.log('[handleMessage] EXECUTE_PROMPT received:', {
+                promptTitle,
+                textLength: selectedText?.length,
+                hasVisionContext: pageContext?.type === 'vision'
+            });
 
-            // Create a simple card object for the prompt execution
-            const promptCard = {
-                id: AskPromptId,
-                title: promptTitle,
-                text: prompt,
-                language: 'English',
-                imageKey: null,
-                itemType: PromptTypes.CUSTOM
-            };
+            // Check if we have vision mode with screenshot
+            if (pageContext && pageContext.type === 'vision' && pageContext.screenshot) {
+                Logger.log('[handleMessage] Processing vision mode with screenshot');
 
-            // Execute the prompt directly (prompt already filled by toolbar)
-            goToAskEngine(prompt, { id: AskPromptId, title: promptTitle }, undefined);
+                // Convert screenshot data URL to File
+                const screenshot = pageContext.screenshot;
+                const base64Data = screenshot.split(',')[1];
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'image/png' });
+                const screenshotFile = new File([blob], 'page-screenshot.png', { type: 'image/png' });
+
+                // Execute with screenshot as image upload
+                goToAskEngine(
+                    prompt,
+                    { id: AskPromptId, title: promptTitle },
+                    undefined,
+                    true, // isUploadFile
+                    [screenshot, 'page-screenshot.png', new Map(), FileTypes.Image, screenshotFile]
+                );
+            } else {
+                // Text mode or no pageContext - execute normally
+                Logger.log('[handleMessage] Processing text mode');
+                goToAskEngine(prompt, { id: AskPromptId, title: promptTitle }, undefined);
+            }
+
             return;
         }
 

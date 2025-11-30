@@ -50,12 +50,18 @@ export class GeminiBot extends BotBase implements IBot {
             const userSettings = await this.storage.get<any>('userSettings');
             this.apiKey = userSettings?.geminiApiKey || '';
 
-            if (!this.apiKey) {
+            Logger.log('[GeminiBot] Retrieved API key:', {
+                hasKey: !!this.apiKey,
+                keyLength: this.apiKey?.length || 0,
+                userSettings: userSettings
+            });
+
+            if (!this.apiKey || this.apiKey.trim() === '') {
                 Logger.warn('[GeminiBot] No API key found in storage');
                 return false;
             }
 
-            const genAI = new GoogleGenerativeAI(this.apiKey);
+            const genAI = new GoogleGenerativeAI(this.apiKey.trim());
             this.model = genAI.getGenerativeModel({
                 model: 'gemini-2.0-flash-exp',
                 generationConfig: {
@@ -66,6 +72,7 @@ export class GeminiBot extends BotBase implements IBot {
                 }
             });
 
+            Logger.log('[GeminiBot] Model initialized successfully');
             return true;
         } catch (error) {
             Logger.error('[GeminiBot] Failed to initialize model:', error);
@@ -142,17 +149,27 @@ export class GeminiBot extends BotBase implements IBot {
 
         } catch (error: any) {
             Logger.error('[GeminiBot] Completion failed:', error);
+            Logger.error('[GeminiBot] Error details:', {
+                message: error?.message,
+                status: error?.status,
+                statusText: error?.statusText,
+                stack: error?.stack
+            });
 
             let errorCode = ErrorCode.NETWORK_ERROR;
             let errorMessage = error?.message || 'Unknown error occurred';
 
-            // Parse Gemini API errors
-            if (error?.message?.includes('API_KEY_INVALID')) {
+            // Parse Gemini API errors - check multiple possible error formats
+            const errorStr = (error?.message || '').toLowerCase();
+            if (errorStr.includes('api') && (errorStr.includes('key') || errorStr.includes('invalid') || errorStr.includes('401') || errorStr.includes('403'))) {
                 errorCode = ErrorCode.UNAUTHORIZED;
-                errorMessage = 'Invalid Gemini API key';
-            } else if (error?.message?.includes('quota')) {
+                errorMessage = 'Invalid or missing Gemini API key. Please check your API key in Settings.';
+            } else if (errorStr.includes('quota') || errorStr.includes('429')) {
                 errorCode = ErrorCode.CONVERSATION_LIMIT;
                 errorMessage = 'Gemini API quota exceeded';
+            } else if (errorStr.includes('model not found') || errorStr.includes('404')) {
+                errorCode = ErrorCode.MODEL_INTERNAL_ERROR;
+                errorMessage = 'Gemini model not available. The model may have been updated.';
             }
 
             cb(rid, {

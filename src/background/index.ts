@@ -135,9 +135,10 @@ async function handleScreenshotCapture(sendResponse: (response: any) => void) {
             debuggerAttached = false;
             console.log('[Background] ✓ Debugger detached');
 
-            // Return base64 data (CDP returns it directly without data URL prefix)
-            console.log('[Background] Preparing to send response with screenshot data...');
-            safeSendResponse({ success: true, screenshot: result.data });
+            // Return base64 data as proper data URL (CDP returns raw base64 without prefix)
+            const dataUrl = `data:image/png;base64,${result.data}`;
+            console.log('[Background] Preparing to send response with screenshot data URL...');
+            safeSendResponse({ success: true, screenshot: dataUrl });
         } catch (debuggerError: any) {
             console.error('[Background] Debugger error:', debuggerError);
             console.error('[Background] Error message:', debuggerError?.message);

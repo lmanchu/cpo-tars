@@ -578,7 +578,7 @@ export const AIMessage = memo(({message, i}: {
         });
 
         window.addEventListener('mousedown', (e: MouseEvent) => {
-            if (e.target !== switchRef.current && !popoverRef.current!.contains(e.target as Node) ) {
+            if (e.target !== switchRef.current && popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
                 setPopoverOpen(false);
             }
         });
@@ -1273,7 +1273,26 @@ function ConversationContent() {
 
                 // Convert screenshot data URL to File
                 const screenshot = pageContext.screenshot;
+                Logger.log('[handleMessage] Screenshot data:', {
+                    length: screenshot?.length,
+                    prefix: screenshot?.substring(0, 50),
+                    hasComma: screenshot?.includes(',')
+                });
+
+                // Validate screenshot is a proper data URL
+                if (!screenshot || !screenshot.includes(',') || !screenshot.startsWith('data:')) {
+                    Logger.error('[handleMessage] Invalid screenshot format, falling back to text mode');
+                    goToAskEngine(prompt, { id: AskPromptId, title: promptTitle }, undefined);
+                    return;
+                }
+
                 const base64Data = screenshot.split(',')[1];
+                if (!base64Data) {
+                    Logger.error('[handleMessage] No base64 data found in screenshot');
+                    goToAskEngine(prompt, { id: AskPromptId, title: promptTitle }, undefined);
+                    return;
+                }
+
                 const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {

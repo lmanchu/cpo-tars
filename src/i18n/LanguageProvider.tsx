@@ -7,22 +7,16 @@ interface LanguageProviderProps {
 }
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const [isReady, setIsReady] = useState(false);
-
   useEffect(() => {
-    // Initialize language from storage
-    initializeLanguage().then(() => {
-      setIsReady(true);
-    });
+    // Initialize language from storage (async, non-blocking)
+    initializeLanguage();
 
     // Setup language sync with storage
     setupLanguageSync();
   }, []);
 
-  if (!isReady) {
-    return null; // or a loading spinner
-  }
-
+  // Always render immediately with default language (English)
+  // Language will update automatically when loaded from storage
   return (
     <I18nextProvider i18n={i18n}>
       {children}

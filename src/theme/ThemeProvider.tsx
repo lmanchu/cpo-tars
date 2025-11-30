@@ -19,6 +19,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
   const [isReady, setIsReady] = useState(false);
 
+  // Apply initial light theme immediately to avoid black screen
+  React.useEffect(() => {
+    const root = document.documentElement;
+    if (!root.classList.contains('light') && !root.classList.contains('dark')) {
+      root.classList.add('light');
+    }
+  }, []);
+
   // Get system theme preference
   const getSystemTheme = (): ResolvedTheme => {
     if (typeof window !== 'undefined' && window.matchMedia) {
@@ -129,10 +137,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [theme]);
 
-  if (!isReady) {
-    return null; // or a loading spinner
-  }
-
+  // Always render children, even if theme is not ready yet
   return (
     <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
       {children}

@@ -946,14 +946,18 @@ const QuickPromptButtons = memo(() => {
     const prompts = TEXT_PROMPTS.filter(p => p.id !== 'ask-ai');
 
     return (
-        <div className="px-3 py-2 bg-white border-b border-gray-100">
+        <div className="px-3 py-2" style={{ backgroundColor: 'var(--bg-primary)', borderBottom: '1px solid var(--border-primary)' }}>
             <div className="flex gap-2 items-center justify-center">
                 {prompts.map(prompt => (
                     <Tooltip key={prompt.id} title={prompt.description}>
                         <button
                             onClick={() => handleQuickPrompt(prompt.id)}
                             disabled={isProcessing === prompt.id}
-                            className="flex items-center justify-center w-8 h-8 text-xl border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex items-center justify-center w-8 h-8 text-xl rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{
+                                border: '1px solid var(--border-primary)',
+                                backgroundColor: isProcessing === prompt.id ? 'var(--bg-hover)' : 'transparent'
+                            }}
                         >
                             {prompt.id === 'summarize' && '📝'}
                             {prompt.id === 'explain' && '💡'}

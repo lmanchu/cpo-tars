@@ -119,7 +119,8 @@
 }
 
 .conversation {
-    @apply flex overflow-hidden flex-col relative transition-all ltr:pr-0 rtl:pl-0 bg-[#F6F6F6];
+    @apply flex overflow-hidden flex-col relative transition-all ltr:pr-0 rtl:pl-0;
+    background-color: var(--bg-secondary);
     .chatList {
         @apply relative mt-4 mb-4 flex-1 overflow-y-auto;
 
@@ -162,7 +163,7 @@
             }
 
             .l:after {
-                @apply  border-r-white;
+                border-right-color: var(--bg-primary);
                 left: -14px;
             }
 
@@ -173,7 +174,8 @@
                 .tabItem {
                     @apply w-[33.3%] h-full flex justify-center items-center cursor-pointer text-[12px] px-2 relative;
                     &.active {
-                        @apply bg-white rounded-[12px];
+                        @apply rounded-[12px];
+                        background-color: var(--bg-primary);
                     }
                     img {
                         @apply mr-[4px];
@@ -196,7 +198,8 @@
     }
 
     .mainInputArea {
-        @apply px-[8px] pb-[8px] gap-1 bg-white rounded-tl-[20px] rounded-tr-[20px];
+        @apply px-[8px] pb-[8px] gap-1 rounded-tl-[20px] rounded-tr-[20px];
+        background-color: var(--bg-primary);
 
         .chatInputTopBar {
             @apply flex justify-between mb-[6px] px-1 items-center mt-[16px];

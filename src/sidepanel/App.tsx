@@ -43,7 +43,7 @@ export const App = () => {
     };
 
     return (
-        <div className="h-screen flex flex-col bg-gray-50">
+        <div className="h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-secondary)' }}>
             <Header />
             <TabNav activeTab={activeTab} onTabChange={setActiveTab} />
             <div className="flex-1 overflow-auto" style={{ padding: activeTab === 'Chat' ? 0 : '1rem' }}>
